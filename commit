@@ -1,0 +1,12 @@
+#!/bin/bash
+# Save this as git-auto-add.sh
+
+# Stage all changes
+git add .
+
+# Commit with a default message or a provided argument
+if [ -z "$1" ]; then
+    git commit -m "Auto-commit: $(date)"
+else
+    git commit -m "$1"
+fi
