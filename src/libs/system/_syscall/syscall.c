@@ -70,28 +70,6 @@ int _PTYPE_Parent(int x)
     return 0;
 }
 
-#include "../../std/string.h"
-#include "../../std/memory.h"
-#include "../../std/io.h"
-
-int __CheckDirForBinary(const char* dir, const char* binary)
-{
-    Directory DIR = io.getDirectory(dir);
-    if(DIR == NULL) return -1;
-
-    for(int i = 0; i < DIR->size; i++)
-    {
-        DirectoryObject obj = DIR[i].object;
-        if(string.compare(obj->name, binary) == 0)
-        {
-            return 1;
-        }
-    }
-    return 0;
-}
-
-
-
 
 #include "syscall_unistd.h"
 int __syscall_c_execvp(const char* file, char* const argv[])
