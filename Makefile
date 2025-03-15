@@ -28,13 +28,16 @@ YELLOW := \033[0;33m
 NC     := \033[0m
 
 # Gather all .c and .asm files under src/
-C_SRCS   := $(shell find $(SRC_DIR) -type f -name '*.c')
+C_SRCS   := $(shell find $(SRC_DIR) -type f -name '*.c' ! -path '$(SRC_DIR)/modules/*')
 ASM_SRCS := $(shell find $(SRC_DIR) -type f -name '*.asm')
 
-# Convert them into .o paths under obj/
 OBJS := \
   $(patsubst $(SRC_DIR)/%.c,   $(OBJ_DIR)/%.o, $(C_SRCS)) \
   $(patsubst $(SRC_DIR)/%.asm, $(OBJ_DIR)/%.o, $(ASM_SRCS))
+
+OBJS := $(filter-out $(OBJ_DIR)/modules/%, $(OBJS))
+
+
 
 ###############################################################################
 # Main Program Build Targets
@@ -138,15 +141,30 @@ testcpio:
 ###############################################################################
 # Module Build Targets
 ###############################################################################
+
 MODULES_DIR := src/modules
 MODULE_C_SRCS := $(shell find $(MODULES_DIR) -type f -name '*.c')
-MODULE_BINARIES := $(addprefix $(BIN_DIR)/, $(basename $(notdir $(MODULE_C_SRCS))))
+
+# Generate output binary paths in /build/release/bin/
+MODULE_BINARIES := $(patsubst $(MODULES_DIR)/%.c, $(BIN_DIR)/%, $(MODULE_C_SRCS))
+
+# All object files in obj/libs/
+LIB_OBJS := $(shell find $(OBJ_DIR)/libs -type f -name '*.o')
 
 .PHONY: modules
-modules: $(MODULE_BINARIES)
+modules: check-build $(MODULE_BINARIES)
 
-$(BIN_DIR)/%: $(MODULES_DIR)/%.c
-	@mkdir -p $(dir $@)
-	@echo -e "$(GREEN)Building module '$*'...$(NC)"
-	@$(CC) $(CFLAGS) -static -o $@ $<
+.PHONY: check-build
+check-build:
+	@if [ ! -d "$(BUILD_DIR)" ]; then \
+		echo -e "$(YELLOW)Build directory missing, running 'make release' first...$(NC)"; \
+		$(MAKE) release; \
+	fi
+
+# Compile module C files into binaries
+$(BIN_DIR)/%: $(MODULES_DIR)/%.c $(LIB_OBJS)
+	@mkdir -p $(BIN_DIR)  # Ensure bin/ exists
+	@modname=$*; \
+	echo -e "$(GREEN)Building module '$${modname}' $(NC)"; \
+	$(CC) $(CFLAGS) -static -o $@ $< $(LIB_OBJS) >/dev/null 2>&1
 
