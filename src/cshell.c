@@ -61,15 +61,6 @@ void __cshell_run_process(int *arg)
     }
 }
 
-
-void cls()
-{
-    int termHeight = io.getTermInfo().row;
-    for(int i = 0; i > termHeight; ++i)
-        io.print("\n");
-}
-
-
 #include <sys/mount.h>
 #include <errno.h>
 
@@ -112,7 +103,6 @@ void __cshell_setupfs()
 
 int cshell_run()
 {
-    cls();
     __cshell_setupfs();
 
     int process_stat;
