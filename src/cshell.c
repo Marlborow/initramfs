@@ -18,6 +18,14 @@ int __cshell_cd(String directory)
 
 }
 
+void __cls(int size)
+{
+    for(int i =0; i < size; ++i)
+    {
+        io.endl();
+    }
+}
+
 void __cshell_run_process(int *arg)
 {
     *arg = 1;
@@ -34,6 +42,11 @@ void __cshell_run_process(int *arg)
             *arg = 0;
             syscall.exit(0);
 
+        }
+
+        if(string.compare(input, "cls") == 0 || string.compare(input, "clear") == 0)
+        {
+            __cls(50);
         }
 
         if(string.compare(input,"<3") == 0) {
@@ -66,6 +79,8 @@ void __cshell_run_process(int *arg)
 
 void __cshell_setupfs()
 {
+
+
     if (mount("none", "/", NULL, MS_REMOUNT | MS_NOATIME, NULL) < 0)
         io.print(string.fmt("Error: Could not remount root filesystem, errno: %d\n", errno))->endl();
     else io.print("Mounted root filesystem")->endl();
@@ -88,10 +103,9 @@ void __cshell_setupfs()
         io.print(string.fmt("Error: Could not mount /dev, errno: %d\n", errno))->endl();
     else io.print("Mounted /dev")->endl();
 
-    // Create necessary device nodes
+
     syscall.mknod("/dev/null", __S_IFCHR | 0666, (1 << 8) | 3);       // Major: 1, Minor: 3
     syscall.mknod("/dev/console", __S_IFCHR | 0622, (5 << 8) | 1);    // Major: 5, Minor: 1
-
     syscall.mkdir("/bin", 0755);
 
     static char *env[] = {
@@ -104,6 +118,8 @@ void __cshell_setupfs()
 int cshell_run()
 {
     __cshell_setupfs();
+    __cls(50);
+    io.print("Meow meow meow...")->endl();
 
     int process_stat;
     __cshell_run_process(&process_stat);

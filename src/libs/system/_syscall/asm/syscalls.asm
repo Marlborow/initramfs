@@ -8,7 +8,7 @@ global __syscall_fcntl
 global __syscall_chdir
 
 global __syscall_execve
-
+global __syscall_access
     ;Using unistd fork until
     ;can produce the same result standalone
 
@@ -132,6 +132,10 @@ __syscall_ioctl:
 __syscall_fcntl:
     mov rax, 72
     syscall
+    ret
+
+__syscall_access:
+    mov rax, 21
     ret
 
 __syscall_getpid:

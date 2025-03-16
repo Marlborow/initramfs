@@ -124,19 +124,36 @@ linux-rebuild: clean release
 .PHONY: linux
 linux: release
 	@echo -e "$(GREEN)Creating initramfs $(PROGRAM).cpio...$(NC)"
-	@cd $(RELEASE_DIR) && find . | cpio -H newc -o --owner=root:root > $(PROGRAM).cpio
+	@cd $(RELEASE_DIR) && find . -mindepth 1 | cpio -H newc -o --owner=root:root > $(PROGRAM).cpio
 
 	@echo -e "$(GREEN)Building Linux ISO with initramfs...$(NC)"
-	$(MAKE) -C $(HOME)/$(LINUX_DIR) isoimage FDARGS="initrd=/init.cpio" FDINITRD=$(HOME)/Source/Userspace/$(RELEASE_DIR)/$(PROGRAM).cpio
+	$(MAKE) -C $(HOME)/$(LINUX_DIR) isoimage FDARGS="init=/init" FDINITRD=$(HOME)/Source/Userspace/$(RELEASE_DIR)/$(PROGRAM).cpio
+
+
+.PHONY: QEMU/rootfs.img
+QEMU/rootfs.img:
+	@echo -e "$(GREEN)Creating QEMU/rootfs.img (128MB ext4)...$(NC)"
+	mkdir -p QEMU
+	qemu-img create -f raw QEMU/rootfs.img 128M
+	mkfs.ext4 QEMU/rootfs.img
+
 
 .PHONY: run-linux
 run-linux:
-	@qemu-system-x86_64 -cdrom $(HOME)/$(LINUX_DIR)/arch/x86/boot/image.iso
+	@echo -e "$(GREEN)Running Linux in QEMU with 9P shared folder...$(NC)"
+	qemu-system-x86_64 \
+		-m 512M \
+		-kernel $(HOME)/linux-6.13.7/arch/x86/boot/bzImage \
+		-initrd build/release/init.cpio \
+		-fsdev local,id=fsdev0,path=/home/sirrus/shared,security_model=mapped \
+		-device virtio-9p-pci,fsdev=fsdev0,mount_tag=hostshare \
+		-append "root=/dev/ram rw nokaslr" \
 
-.PHONY: testcpio
-testcpio:
-	@mkdir -p $(HOME)/Source/Userspace/$(BUILD_DIR)/testing
-	@cd $(HOME)/Source/Userspace/$(BUILD_DIR)/testing && cpio -idv < $(HOME)/Source/Userspace/$(RELEASE_DIR)/$(PROGRAM).cpio > test.txt
+
+
+
+
+
 
 ###############################################################################
 # Module Build Targets

@@ -12,6 +12,7 @@ extern int      __syscall_wait    (int *wstatus);
 extern int      __syscall_waitid  (int p_type, int pid, void *info, int options);
 extern void     __syscall_fsync   (int fd);
 extern int      __syscall_fcntl   (int fd, int cmd, unsigned long arg);
+extern int      __syscall_access  (const char* filename, int mode);
 
 extern int    __syscall_pipe     (int* filedes);
 extern int    __syscall_chdir    (const char* path);
@@ -56,6 +57,7 @@ struct __Syscall {
     int    (*fcntl)  (int, int, unsigned long);
     int    (*chdir)  (const char*);
     void   (*mkdir)  (const char*, int);
+    int    (*access) (const char*, int);
 
     int    (*pipe)   (int*);
     int    (*dup2)   (unsigned int, unsigned int);
@@ -88,6 +90,13 @@ struct __Syscall {
 #define	__S_IFLNK	0120000	/* Symbolic link.  */
 #define	__S_IFSOCK	0140000	/* Socket.  */
 
+
+/* Values for the second argument to access.
+   These may be OR'd together.  */
+#  define R_OK	4		/* Test for read permission.  */
+#  define W_OK	2		/* Test for write permission.  */
+#  define X_OK	1		/* Test for execute permission.  */
+#  define F_OK	0		/* Test for existence.  */
 
 
 struct __FD {
